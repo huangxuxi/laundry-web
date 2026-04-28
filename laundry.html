@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The King Of Majapahit Treatment — Sistem Manajemen Laundry</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link rel="stylesheet" href="laundry.css">
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">👑</div>
+    <h1>The King Of Majapahit Treatment</h1>
+    <p>Laundry Sistem Manajemen</p>
+  </div>
+  <div class="nav-section">
+    <div class="nav-item active" onclick="showPage('dashboard',this)"><span class="nav-icon">📊</span><span>Dashboard</span></div>
+    <div class="nav-item" onclick="showPage('input-pesanan',this)"><span class="nav-icon">✏️</span><span>Input Pesanan</span></div>
+    <div class="nav-item" onclick="showPage('pesanan-aktif',this)"><span class="nav-icon">🔄</span><span>Pesanan Aktif</span><span class="nav-badge" id="badge-aktif">0</span></div>
+    <div class="nav-item" onclick="showPage('siap-antar',this)"><span class="nav-icon">🚚</span><span>Siap Antar</span><span class="nav-badge green" id="badge-antar">0</span></div>
+    <div class="nav-item" onclick="showPage('rekap',this)"><span class="nav-icon">💰</span><span>Rekap Pendapatan</span></div>
+    <div class="nav-item" onclick="showPage('layanan',this)"><span class="nav-icon">⚙️</span><span>Layanan & Harga</span></div>
+    <div class="nav-item" onclick="showPage('pelanggan',this)"><span class="nav-icon">👥</span><span>Data Pelanggan</span></div>
+  </div>
+  <div class="sidebar-footer">v2.0 © 2025</div>
+</nav>
+
+<!-- MAIN -->
+<div id="main">
+  <div class="topbar">
+    <div class="topbar-title" id="page-title">Dashboard</div>
+    <div class="topbar-date" id="topbar-date"></div>
+    <button class="btn btn-primary btn-sm" onclick="goInputPesanan()">+ Pesanan Baru</button>
+  </div>
+
+  <div class="content">
+
+    <!-- ======= DASHBOARD ======= -->
+    <div id="page-dashboard" class="page active">
+      <div class="stats-grid">
+        <div class="stat-card c3"><div class="stat-label">Pesanan Aktif Hari Ini</div><div class="stat-val" id="stat-aktif">0</div><div class="stat-sub">Masuk hari ini</div></div>
+        <div class="stat-card c4"><div class="stat-label">Siap Antar</div><div class="stat-val" id="stat-antar">0</div><div class="stat-sub">Menunggu pengiriman</div></div>
+        <div class="stat-card c1"><div class="stat-label">Pendapatan Hari Ini</div><div class="stat-val" id="stat-hari-ini">Rp0</div><div class="stat-sub">Lunas diterima</div></div>
+        <div class="stat-card c2"><div class="stat-label">Pelanggan Hari Ini</div><div class="stat-val" id="stat-pelanggan">0</div><div class="stat-sub">Transaksi hari ini</div></div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Pesanan Masuk Hari Ini</div>
+          <ul class="timeline" id="dash-timeline"><li><div class="empty-state"><p>Belum ada pesanan hari ini</p></div></li></ul>
+        </div>
+        <div class="card">
+          <div class="card-title">Grafik Pendapatan (7 Hari)</div>
+          <div class="chart-wrap"><canvas id="chartDashboard"></canvas></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Pesanan Aktif Hari Ini</div>
+        <div class="table-wrap">
+          <table><thead><tr><th>Invoice</th><th>Pelanggan</th><th>Item</th><th>Layanan</th><th>Total</th><th>Status</th></tr></thead>
+          <tbody id="dash-tbody"><tr><td colspan="6"><div class="empty-state"><p>Belum ada data</p></div></td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======= INPUT PESANAN ======= -->
+    <div id="page-input-pesanan" class="page">
+      <div class="card">
+        <div class="card-title">Data Pelanggan</div>
+        <div class="form-grid form-grid-3">
+          <div class="form-group"><label class="form-label">Nama Pelanggan *</label><input class="form-input" id="inp-nama" type="text" placeholder="Nama lengkap"></div>
+          <div class="form-group"><label class="form-label">No. HP *</label><input class="form-input" id="inp-hp" type="text" placeholder="08xxxxxxxxxx"></div>
+          <div class="form-group"><label class="form-label">Alamat Pengiriman *</label><input class="form-input" id="inp-alamat" type="text" placeholder="Jl. ..."></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Detail Laundry</div>
+
+        <!-- TANGGAL (shared for all service rows) -->
+        <div class="form-grid form-grid-3" style="margin-bottom:16px">
+          <div class="form-group">
+            <label class="form-label">Tanggal Masuk *</label>
+            <input class="form-input" id="inp-tgl-masuk" type="date">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Estimasi Selesai *</label>
+            <input class="form-input" id="inp-tgl-selesai" type="date">
+          </div>
+        </div>
+
+        <!-- SERVICE ROWS CONTAINER -->
+        <div id="service-rows-container"></div>
+
+        <!-- TAMBAH LAYANAN BUTTON -->
+        <button class="btn btn-ghost btn-sm" onclick="tambahServiceRow()" style="margin-top:4px;margin-bottom:16px;border:1px dashed var(--border2);width:100%;justify-content:center;gap:6px">
+          <span style="font-size:16px">＋</span> Tambah Layanan
+        </button>
+
+        <!-- GRAND TOTAL -->
+        <div style="display:flex;align-items:center;justify-content:flex-end;gap:12px;padding:12px 16px;background:var(--bg3);border-radius:var(--radius-sm);margin-bottom:8px">
+          <span style="font-size:13px;color:var(--text2);font-weight:600">TOTAL KESELURUHAN</span>
+          <span id="inp-grand-total" style="font-size:18px;font-weight:700;color:var(--c4);font-family:var(--mono)">Rp0</span>
+        </div>
+
+        <!-- METODE PEMBAYARAN -->
+        <div class="divider"></div>
+        <div class="form-label" style="margin-bottom:12px">Metode Pembayaran *</div>
+        <div class="pay-options">
+          <div class="pay-option" id="opt-tunai" onclick="pilihMetodeBayar('tunai')">💵 Tunai</div>
+          <div class="pay-option" id="opt-nontunai" onclick="pilihMetodeBayar('nontunai')">📱 Non-Tunai (QRIS)</div>
+        </div>
+
+        <!-- SUB-OPSI TUNAI -->
+        <div class="pay-step" id="step-tunai">
+          <div class="form-group">
+            <label class="form-label" style="margin-bottom:8px">Waktu Pembayaran</label>
+            <div class="pay-options">
+              <div class="pay-option" id="opt-lunas" onclick="pilihWaktuBayar('lunas')">✅ Bayar Lunas Sekarang</div>
+              <div class="pay-option" id="opt-cod" onclick="pilihWaktuBayar('cod')">🚚 COD (Bayar Saat Diantar)</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SUB-OPSI NON-TUNAI / QRIS -->
+        <div class="pay-step" id="step-nontunai">
+          <div class="qris-box">
+            <div style="font-size:12px;color:var(--text2);margin-bottom:6px">Scan QRIS untuk Pembayaran</div>
+            <div class="qris-frame">
+              <!-- QRIS SVG Placeholder -->
+              <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <rect width="100" height="100" fill="white"/>
+                <!-- TL finder -->
+                <rect x="5" y="5" width="30" height="30" fill="none" stroke="#000" stroke-width="4"/>
+                <rect x="12" y="12" width="16" height="16" fill="#000"/>
+                <!-- TR finder -->
+                <rect x="65" y="5" width="30" height="30" fill="none" stroke="#000" stroke-width="4"/>
+                <rect x="72" y="12" width="16" height="16" fill="#000"/>
+                <!-- BL finder -->
+                <rect x="5" y="65" width="30" height="30" fill="none" stroke="#000" stroke-width="4"/>
+                <rect x="12" y="72" width="16" height="16" fill="#000"/>
+                <!-- Data dots pattern -->
+                <rect x="42" y="5" width="5" height="5" fill="#000"/>
+                <rect x="50" y="5" width="5" height="5" fill="#000"/>
+                <rect x="42" y="13" width="5" height="5" fill="#000"/>
+                <rect x="58" y="13" width="5" height="5" fill="#000"/>
+                <rect x="42" y="21" width="5" height="5" fill="#000"/>
+                <rect x="50" y="21" width="5" height="5" fill="#000"/>
+                <rect x="58" y="21" width="5" height="5" fill="#000"/>
+                <rect x="5" y="42" width="5" height="5" fill="#000"/>
+                <rect x="13" y="42" width="5" height="5" fill="#000"/>
+                <rect x="21" y="42" width="5" height="5" fill="#000"/>
+                <rect x="5" y="50" width="5" height="5" fill="#000"/>
+                <rect x="21" y="50" width="5" height="5" fill="#000"/>
+                <rect x="5" y="58" width="5" height="5" fill="#000"/>
+                <rect x="13" y="58" width="5" height="5" fill="#000"/>
+                <rect x="42" y="42" width="5" height="5" fill="#000"/>
+                <rect x="50" y="42" width="5" height="5" fill="#000"/>
+                <rect x="58" y="42" width="5" height="5" fill="#000"/>
+                <rect x="42" y="50" width="5" height="5" fill="#000"/>
+                <rect x="58" y="50" width="5" height="5" fill="#000"/>
+                <rect x="50" y="58" width="5" height="5" fill="#000"/>
+                <rect x="42" y="65" width="5" height="5" fill="#000"/>
+                <rect x="58" y="65" width="5" height="5" fill="#000"/>
+                <rect x="42" y="73" width="5" height="5" fill="#000"/>
+                <rect x="50" y="73" width="5" height="5" fill="#000"/>
+                <rect x="65" y="42" width="5" height="5" fill="#000"/>
+                <rect x="73" y="42" width="5" height="5" fill="#000"/>
+                <rect x="65" y="50" width="5" height="5" fill="#000"/>
+                <rect x="81" y="50" width="5" height="5" fill="#000"/>
+                <rect x="73" y="58" width="5" height="5" fill="#000"/>
+                <rect x="65" y="65" width="5" height="5" fill="#000"/>
+                <rect x="73" y="65" width="5" height="5" fill="#000"/>
+                <rect x="81" y="65" width="5" height="5" fill="#000"/>
+                <rect x="65" y="73" width="5" height="5" fill="#000"/>
+                <rect x="81" y="73" width="5" height="5" fill="#000"/>
+                <rect x="65" y="81" width="5" height="5" fill="#000"/>
+                <rect x="73" y="81" width="5" height="5" fill="#000"/>
+                <rect x="42" y="81" width="5" height="5" fill="#000"/>
+                <rect x="50" y="81" width="5" height="5" fill="#000"/>
+                <rect x="58" y="81" width="5" height="5" fill="#000"/>
+              </svg>
+            </div>
+            <div style="font-size:11px;font-weight:700;color:var(--c3)">The King Of Majapahit Treatment</div>
+            <div id="qris-nominal" style="font-size:13px;font-weight:700;color:var(--c1);margin-top:4px">—</div>
+            <div style="font-size:10px;color:var(--text2);margin-top:4px">Pembayaran akan otomatis tercatat sebagai Lunas</div>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top:14px">
+          <label class="form-label">Catatan Tambahan</label>
+          <textarea class="form-textarea" id="inp-catatan" placeholder="Instruksi khusus..."></textarea>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:12px">
+        <button class="btn btn-primary" onclick="simpanPesanan()">💾 Simpan & Cetak Invoice</button>
+        <button class="btn btn-ghost" onclick="resetForm()">🗑 Reset Form</button>
+      </div>
+    </div>
+
+    <!-- ======= PESANAN AKTIF ======= -->
+    <div id="page-pesanan-aktif" class="page">
+      <div class="section-header">
+        <h2>Daftar Pesanan Aktif</h2>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <div class="search-bar"><span>🔍</span><input type="text" id="search-aktif" placeholder="Cari nama/invoice..." oninput="renderPesananAktif()"></div>
+          <select class="form-select" id="filter-aktif-status" style="width:150px" onchange="renderPesananAktif()">
+            <option value="">Semua Status</option><option value="diproses">Diproses</option><option value="selesai">Siap Antar</option>
+          </select>
+          <select class="form-select" id="filter-aktif-bayar" style="width:150px" onchange="renderPesananAktif()">
+            <option value="">Semua Bayar</option><option value="lunas">Lunas</option><option value="cod">COD</option>
+          </select>
+        </div>
+      </div>
+      <div class="card" style="padding:0">
+        <div class="table-wrap">
+          <table><thead><tr>
+            <th>Invoice</th><th>Nama</th><th>Item</th><th>Layanan</th><th>Berat/Qty</th>
+            <th>Total</th><th>Bayar</th><th>Tgl Masuk</th><th>Est. Selesai</th><th>Status</th><th>Aksi</th>
+          </tr></thead><tbody id="tbody-aktif"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======= SIAP ANTAR ======= -->
+    <div id="page-siap-antar" class="page">
+      <div class="section-header">
+        <h2>Daftar Siap Antar</h2>
+        <div class="search-bar"><span>🔍</span><input type="text" id="search-antar" placeholder="Cari pelanggan..." oninput="renderSiapAntar()"></div>
+      </div>
+      <div id="antar-list"><div class="empty-state"><div class="empty-icon">🚚</div><p>Belum ada pesanan siap antar</p></div></div>
+    </div>
+
+    <!-- ======= REKAP ======= -->
+    <div id="page-rekap" class="page">
+      <div class="filter-bar">
+        <div class="form-group" style="flex-direction:row;align-items:center;gap:8px">
+          <label class="form-label" style="white-space:nowrap">Dari:</label>
+          <input class="form-input" type="date" id="filter-tgl-dari" style="width:155px">
+        </div>
+        <div class="form-group" style="flex-direction:row;align-items:center;gap:8px">
+          <label class="form-label" style="white-space:nowrap">Sampai:</label>
+          <input class="form-input" type="date" id="filter-tgl-sampai" style="width:155px">
+        </div>
+        <select class="form-select" id="filter-rekap-layanan" style="width:200px"><option value="">Semua Layanan</option></select>
+        <button class="btn btn-primary" onclick="renderRekap()">🔍 Filter</button>
+        <button class="btn btn-ghost" onclick="resetFilterRekap()">Reset</button>
+        <button class="btn btn-success" onclick="eksporCSV()" style="margin-left:auto">📥 Ekspor CSV</button>
+        <button class="btn btn-warning" onclick="eksporPDF()">📄 Download PDF</button>
+      </div>
+
+      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+        <div class="stat-card c4"><div class="stat-label">Total Pendapatan</div><div class="stat-val" id="rekap-total">Rp0</div><div class="stat-sub" id="rekap-jumlah">0 transaksi</div></div>
+        <div class="stat-card c3"><div class="stat-label">Sudah Lunas</div><div class="stat-val" id="rekap-lunas">Rp0</div><div class="stat-sub">Diterima</div></div>
+        <div class="stat-card c5"><div class="stat-label">COD Belum Lunas</div><div class="stat-val" id="rekap-cod">Rp0</div><div class="stat-sub" id="rekap-cod-sub">Menunggu pengiriman</div></div>
+      </div>
+
+      <div class="grid-2" style="margin-bottom:16px">
+        <div class="card"><div class="card-title">Grafik Pendapatan Per Tanggal</div><div class="chart-wrap"><canvas id="chartRekap"></canvas></div></div>
+        <div class="card"><div class="card-title">Pendapatan Per Layanan</div><div class="chart-wrap"><canvas id="chartLayananPie"></canvas></div></div>
+      </div>
+
+      <div class="card" style="padding:0">
+        <div style="padding:16px 20px 0;display:flex;align-items:center;justify-content:space-between">
+          <span class="card-title" style="margin:0">Detail Per Transaksi</span>
+        </div>
+        <div class="table-wrap">
+          <table><thead><tr>
+            <th>Invoice</th><th>Tanggal</th><th>Pelanggan</th><th>Item</th><th>Layanan</th>
+            <th>Qty</th><th>Total</th><th>Diterima</th><th>Sisa Tagihan</th><th>Status Bayar</th><th>Status Order</th>
+          </tr></thead><tbody id="tbody-rekap"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======= LAYANAN ======= -->
+    <div id="page-layanan" class="page">
+      <div class="section-header">
+        <h2>Manajemen Layanan & Harga</h2>
+        <button class="btn btn-primary" onclick="openModalLayanan()">+ Tambah Layanan</button>
+      </div>
+      <div class="card" style="padding:0">
+        <div class="table-wrap">
+          <table><thead><tr><th>Nama Layanan</th><th>Berlaku Untuk Item</th><th>Satuan</th><th>Harga</th><th>Deskripsi</th><th>Aksi</th></tr></thead>
+          <tbody id="tbody-layanan"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======= PELANGGAN ======= -->
+    <div id="page-pelanggan" class="page">
+      <div class="section-header">
+        <h2>Data Pelanggan</h2>
+        <div class="search-bar"><span>🔍</span><input type="text" id="search-pelanggan" placeholder="Cari nama/hp..." oninput="renderPelanggan()"></div>
+      </div>
+      <div class="card" style="padding:0">
+        <div class="table-wrap">
+          <table><thead><tr><th>Nama</th><th>No. HP</th><th>Alamat</th><th>Total Order</th><th>Total Belanja</th><th>Riwayat</th></tr></thead>
+          <tbody id="tbody-pelanggan"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end content -->
+</div><!-- end main -->
+
+<!-- INVOICE PREVIEW -->
+<div id="invoice-preview">
+  <div class="invoice-box" id="invoice-content">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+      <div style="width:44px;height:44px;background:linear-gradient(135deg,#F7E731,#F289B5);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px">👑</div>
+      <div>
+        <div style="font-size:15px;font-weight:700;color:#1a1a2e">The King Of Majapahit Treatment</div>
+        <div style="font-size:11px;color:#666">Laundry Sistem Manajemen</div>
+      </div>
+    </div>
+    <div id="inv-nomor" style="font-size:13px;font-weight:700;color:#333;margin-bottom:4px"></div>
+    <div id="inv-tanggal" style="font-size:12px;color:#666;margin-bottom:16px"></div>
+    <hr class="invoice-divider">
+    <div style="margin-bottom:12px">
+      <div style="font-size:11px;color:#999;text-transform:uppercase;letter-spacing:0.5px">Pelanggan</div>
+      <div id="inv-nama" style="font-size:15px;font-weight:700;color:#1a1a2e;margin-top:3px"></div>
+      <div id="inv-hp" style="font-size:12px;color:#666"></div>
+      <div id="inv-alamat" style="font-size:12px;color:#666"></div>
+    </div>
+    <hr class="invoice-divider">
+    <table class="invoice-table">
+      <thead><tr><th>Item</th><th>Layanan</th><th>Berat/Qty</th><th>Harga Satuan</th><th>Subtotal</th></tr></thead>
+      <tbody id="inv-items"></tbody>
+    </table>
+    <hr class="invoice-divider">
+    <div class="invoice-row bold"><span>TOTAL TAGIHAN</span><span id="inv-total-val"></span></div>
+    <div id="inv-bayar-info" style="font-size:12px;color:#888;margin-top:8px"></div>
+    <div id="inv-sisa-info" style="font-size:12px;color:#c0392b;margin-top:4px;font-weight:600"></div>
+    <div id="inv-catatan" style="font-size:12px;color:#666;margin-top:6px;font-style:italic"></div>
+    <div class="invoice-actions">
+      <button class="inv-btn inv-btn-print" onclick="window.print()">🖨 Cetak</button>
+      <button class="inv-btn inv-btn-pdf" onclick="downloadInvoicePDF()">📄 PDF</button>
+      <button class="inv-btn inv-btn-close" onclick="closeInvoice()">✕ Tutup</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL LAYANAN -->
+<div class="modal-overlay" id="modal-layanan">
+  <div class="modal">
+    <div class="modal-title" id="modal-layanan-title">Tambah Layanan Baru</div>
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">Nama Layanan *</label><input class="form-input" id="ml-nama" placeholder="Cuci Kering, Cuci Setrika..."></div>
+      <div class="form-group">
+        <label class="form-label">Berlaku untuk Item</label>
+        <select class="form-select" id="ml-item-filter">
+          <option value="">Semua Item (Layanan Umum)</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Satuan *</label>
+        <select class="form-select" id="ml-satuan"><option value="kg">Per Kilogram (kg)</option><option value="pcs">Per Pcs / Unit</option></select>
+      </div>
+      <div class="form-group"><label class="form-label">Harga (Rp) *</label><input class="form-input" id="ml-harga" type="number" min="0" placeholder="5000"></div>
+      <div class="form-group"><label class="form-label">Deskripsi</label><input class="form-input" id="ml-deskripsi" placeholder="Opsional"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModalLayanan()">Batal</button>
+      <button class="btn btn-primary" onclick="simpanLayanan()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL UPDATE STATUS -->
+<div class="modal-overlay" id="modal-status">
+  <div class="modal">
+    <div class="modal-title">Update Status Pesanan</div>
+    <div id="modal-status-info" style="background:var(--bg3);border-radius:var(--radius-sm);padding:12px;margin-bottom:16px;font-size:13px"></div>
+    <div class="form-group"><label class="form-label">Status Baru</label>
+      <select class="form-select" id="ms-status">
+        <option value="diproses">Diproses</option>
+        <option value="selesai">Selesai (Siap Antar)</option>
+        <option value="terkirim">Terkirim / Selesai</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="document.getElementById('modal-status').classList.remove('show')">Batal</button>
+      <button class="btn btn-primary" onclick="updateStatus()">Update</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL KONFIRMASI ANTAR -->
+<div class="modal-overlay" id="modal-antar">
+  <div class="modal">
+    <div class="modal-title">Konfirmasi Pengiriman</div>
+    <div id="modal-antar-info" style="background:var(--bg3);border-radius:var(--radius-sm);padding:12px;margin-bottom:16px;font-size:13px"></div>
+    <div id="modal-antar-cod" style="display:none">
+      <div class="form-group">
+        <label class="form-label">Jumlah Uang Diterima (Rp)</label>
+        <input class="form-input" id="ma-jumlah" type="number" placeholder="0" oninput="hitungSisaCOD()">
+      </div>
+      <div id="sisa-cod-info" style="margin-top:8px"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="document.getElementById('modal-antar').classList.remove('show')">Batal</button>
+      <button class="btn btn-success" onclick="konfirmasiAntar()">✓ Konfirmasi Terkirim</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="laundry.js"></script>
+</body>
+</html>
